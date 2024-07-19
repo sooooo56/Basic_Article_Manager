@@ -1,73 +1,115 @@
+package com.exam.BAM.app;
+
+import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main {
-	static int lastArticleId;
-	static List<Article> articles;
+import com.exam.BAM.dto.Article;
+import com.exam.BAM.util.Util;
 
-	static {
-		lastArticleId = 0;
-		articles = new ArrayList<>();
+public class App {
+	
+	private int lastArticleId;
+	private List<Article> articles;
+	
+//	private List<JoinMember> members;
+	
+	public App() {
+		this.lastArticleId = 0;
+		this.articles = new ArrayList<>();
 	}
-
-	public static void main(String[] args) {
+	
+	public void run() {
 		System.out.println("== 프로그램 시작 ==");
-
+		
 		makeTestData();
-
+		
 		Scanner sc = new Scanner(System.in);
-
+		
 		while (true) {
 			System.out.printf("명령어) ");
-
+			
 			String cmd = sc.nextLine().trim();
-
+			
 			if (cmd.equals("exit")) {
 				break;
-			}
-
+			} 
+			
 			if (cmd.length() == 0) {
 				System.out.println("명령어를 입력해주세요");
 				continue;
 			}
-
+			
+			// 로그인 기능
+			if (cmd.equals("member join")) {
+//				if (members.size() == 0) {
+//					System.out.println("회원가입한 아이디가 없습니다");
+//					continue;
+//				}
+				
+				System.out.printf("아이디 : ");
+				String joinId = sc.nextLine();
+				System.out.printf("비밀번호 : ");
+				String password = sc.nextLine();
+				
+//				JoinMember member = new JoinMember(joinId,password);
+//				JoinMember.add(member);
+			} 
+			
 			if (cmd.equals("article write")) {
 				System.out.printf("제목 : ");
 				String title = sc.nextLine();
 				System.out.printf("내용 : ");
 				String body = sc.nextLine();
-
+				
 				lastArticleId++;
-
+		        
 				Article article = new Article(lastArticleId, Util.getDateStr(), title, body, 0);
-
+				
 				articles.add(article);
-
+				
 				System.out.println(lastArticleId + "번 글이 생성되었습니다");
-
-			} else if (cmd.equals("article list")) {
-
+				
+			} else if (cmd.startsWith("article list")) {
 				if (articles.size() == 0) {
 					System.out.println("게시글이 없습니다");
 					continue;
 				}
+				
+				List<Article> printArticles = articles;
+				
+				String searchKeyword = cmd.substring("article list".length()).trim();
+				
+				if (searchKeyword.length() > 0) {
+					System.out.println("검색어 : " + searchKeyword);
 
-				System.out.println("번호	|	제목	|		작성일		|	조회수");
-
-				for (int i = articles.size() - 1; i >= 0; i--) {
-					Article article = articles.get(i);
-					System.out.printf("%d	|	%s	|	%s	|	%d\n", article.id, article.title, article.regDate,
-							article.viewCnt);
+					printArticles = new ArrayList<>();
+					
+					for (Article article : articles) {
+						if (article.getTitle().contains(searchKeyword)) {
+							printArticles.add(article);
+						}
+					}
+					
+					if (printArticles.size() == 0) {
+						System.out.println("검색결과가 없습니다");
+						continue;
+					}
 				}
-
-			}
-
-			else if (cmd.startsWith("article detail ")) {
+				
+				System.out.println("번호	|	제목	|		작성일		|	조회수");
+				
+				for (int i = printArticles.size() - 1; i >= 0; i--) {
+					Article article = printArticles.get(i);
+					System.out.printf("%d	|	%s	|	%s	|	%d\n", article.getId(), article.getTitle(), article.getRegDate(), article.getViewCnt());
+				}
+				
+			} else if (cmd.startsWith("article detail ")) {
 				String[] cmdBits = cmd.split(" ");
 
 				int id = 0;
-
+				
 				try {
 					id = Integer.parseInt(cmdBits[2]);
 				} catch (NumberFormatException e) {
@@ -76,34 +118,34 @@ public class Main {
 				} catch (Exception e) {
 					System.out.println("error : " + e);
 				}
-
+				
 				Article foundArticle = null;
-
-				for (Article article : articles) {
-					if (id == article.id) {
+				
+				for (Article article : articles){
+					if (id == article.getId()) {
 						foundArticle = article;
 						break;
 					}
 				}
-
+				
 				if (foundArticle == null) {
 					System.out.println(id + "번 게시물은 존재하지 않습니다");
 					continue;
 				}
-
-				foundArticle.viewCnt++;
-
-				System.out.printf("번호 : %d\n", foundArticle.id);
-				System.out.printf("작성일 : %s\n", foundArticle.regDate);
-				System.out.printf("제목 : %s\n", foundArticle.title);
-				System.out.printf("내용 : %s\n", foundArticle.body);
-				System.out.printf("조회수 : %d\n", foundArticle.viewCnt);
-
+				
+				foundArticle.increaseViewCnt();
+				
+				System.out.printf("번호 : %d\n", foundArticle.getId());
+				System.out.printf("작성일 : %s\n", foundArticle.getRegDate());
+				System.out.printf("제목 : %s\n", foundArticle.getTitle());
+				System.out.printf("내용 : %s\n", foundArticle.getBody());
+				System.out.printf("조회수 : %d\n", foundArticle.getViewCnt());
+				
 			} else if (cmd.startsWith("article delete ")) {
 				String[] cmdBits = cmd.split(" ");
 
 				int id = 0;
-
+				
 				try {
 					id = Integer.parseInt(cmdBits[2]);
 				} catch (NumberFormatException e) {
@@ -112,56 +154,39 @@ public class Main {
 				} catch (Exception e) {
 					System.out.println("error : " + e);
 				}
-
+				
 				Article foundArticle = null;
-
-				for (Article article : articles) {
-					if (id == article.id) {
+				
+				for (Article article : articles){
+					if (id == article.getId()) {
 						foundArticle = article;
 						break;
 					}
 				}
-
+				
 				if (foundArticle == null) {
 					System.out.println(id + "번 게시물은 존재하지 않습니다");
 					continue;
 				}
-
+				
 				articles.remove(foundArticle);
-
+				
 				System.out.println(id + "번 게시물을 삭제했습니다");
-
+				
 			} else {
 				System.out.println("존재하지 않는 명령어 입니다");
 			}
 		}
-
+		
 		sc.close();
-
+		
 		System.out.println("== 프로그램 끝 ==");
 	}
-
-	private static void makeTestData() {
+	
+	private void makeTestData() {
 		System.out.println("테스트용 게시물 데이터 3개를 생성했습니다");
 		for (int i = 1; i <= 3; i++) {
 			articles.add(new Article(++lastArticleId, Util.getDateStr(), "제목" + i, "내용" + i, i * 10));
 		}
-	}
-}
-
-class Article {
-	int id;
-	String regDate;
-	String title;
-	String body;
-	int viewCnt;
-	String foundTitle;
-
-	public Article(int id, String regDate, String title, String body, int viewCnt) {
-		this.id = id;
-		this.regDate = regDate;
-		this.title = title;
-		this.body = body;
-		this.viewCnt = viewCnt;
 	}
 }
