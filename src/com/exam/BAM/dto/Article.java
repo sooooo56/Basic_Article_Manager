@@ -14,7 +14,7 @@ public class Article {
 		this.body = body;
 		this.viewCnt = viewCnt;
 	}
-	
+
 	public int getId() {
 		return id;
 	}
@@ -54,10 +54,8 @@ public class Article {
 	public void setViewCnt(int viewCnt) {
 		this.viewCnt = viewCnt;
 	}
-	
-	
+
 	public void increaseViewCnt() {
 		this.viewCnt++;
 	}
-	
 }
